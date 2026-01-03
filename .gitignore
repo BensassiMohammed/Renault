@@ -1,0 +1,11 @@
+# git
+.git/
+
+# Maven
+target/
+
+# IntelliJ IDEA
+.idea/
+
+# Logs
+*.log

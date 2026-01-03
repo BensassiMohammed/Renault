@@ -1,0 +1,414 @@
+{
+	"info": {
+		"_postman_id": "renault-garage-api-collection",
+		"name": "Renault Garage Service API",
+		"description": "Collection pour tester l'API Renault Garage Service - Conforme au cahier des charges",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Garages",
+			"description": "API de gestion des garages Renault. Champs obligatoires: name, address, telephone, email, horairesOuverture",
+			"item": [
+				{
+					"name": "Créer un garage",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Garage Renault Casablanca\",\n  \"address\": \"123 Avenue Mohammed V\",\n  \"telephone\": \"+212 522 123 456\",\n  \"email\": \"contact@renault-casa.ma\",\n  \"horairesOuverture\": {\n    \"MONDAY\": [{\"startTime\": \"08:00\", \"endTime\": \"18:00\"}],\n    \"TUESDAY\": [{\"startTime\": \"08:00\", \"endTime\": \"18:00\"}],\n    \"WEDNESDAY\": [{\"startTime\": \"08:00\", \"endTime\": \"18:00\"}],\n    \"THURSDAY\": [{\"startTime\": \"08:00\", \"endTime\": \"18:00\"}],\n    \"FRIDAY\": [{\"startTime\": \"08:00\", \"endTime\": \"18:00\"}],\n    \"SATURDAY\": [{\"startTime\": \"09:00\", \"endTime\": \"13:00\"}]\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/garages",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"garages"
+							]
+						},
+						"description": "Crée un nouveau garage. Champs obligatoires: name, address, telephone, email, horairesOuverture (Map<DayOfWeek, List<OpeningTime>>)"
+					}
+				},
+				{
+					"name": "Récupérer un garage par ID",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/garages/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"garages",
+								"1"
+							]
+						},
+						"description": "Récupère les détails d'un garage par son ID"
+					}
+				},
+				{
+					"name": "Lister tous les garages (paginé + tri)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/garages?page=0&size=10&sort=name,asc",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"garages"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sort",
+									"value": "name,asc"
+								}
+							]
+						},
+						"description": "Liste paginée de tous les garages avec possibilité de tri (par nom, ville, etc.)"
+					}
+				},
+				{
+					"name": "Modifier un garage",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Garage Renault Casablanca - Centre\",\n  \"address\": \"456 Boulevard Hassan II\",\n  \"telephone\": \"+212 522 789 012\",\n  \"email\": \"centre@renault-casa.ma\",\n  \"horairesOuverture\": {\n    \"MONDAY\": [{\"startTime\": \"08:00\", \"endTime\": \"18:00\"}],\n    \"TUESDAY\": [{\"startTime\": \"08:00\", \"endTime\": \"18:00\"}]\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/garages/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"garages",
+								"1"
+							]
+						},
+						"description": "Met à jour les informations d'un garage existant"
+					}
+				},
+				{
+					"name": "Supprimer un garage",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/api/garages/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"garages",
+								"1"
+							]
+						},
+						"description": "Supprime un garage du réseau"
+					}
+				},
+				{
+					"name": "Rechercher par type de véhicule (carburant)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/garages/search/by-fuel-type?typeCarburant=ESSENCE",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"garages",
+								"search",
+								"by-fuel-type"
+							],
+							"query": [
+								{
+									"key": "typeCarburant",
+									"value": "ESSENCE"
+								}
+							]
+						},
+						"description": "Recherche des garages par type de véhicule pris en charge. Valeurs: ESSENCE, DIESEL, ELECTRIC, HYBRID"
+					}
+				},
+				{
+					"name": "Rechercher par accessoire disponible",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/garages/search/by-accessory?nom=GPS",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"garages",
+								"search",
+								"by-accessory"
+							],
+							"query": [
+								{
+									"key": "nom",
+									"value": "GPS"
+								}
+							]
+						},
+						"description": "Recherche des garages contenant un accessoire spécifique dans au moins un véhicule"
+					}
+				}
+			]
+		},
+		{
+			"name": "Vehicles",
+			"description": "API de gestion des véhicules. Champs obligatoires: brand, anneeFabrication, typeCarburant. Contrainte: max 50 véhicules par garage",
+			"item": [
+				{
+					"name": "Ajouter un véhicule (Publisher Kafka)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"brand\": \"Renault\",\n  \"model\": \"Clio V\",\n  \"anneeFabrication\": 2024,\n  \"typeCarburant\": \"ESSENCE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/garages/1/vehicles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"garages",
+								"1",
+								"vehicles"
+							]
+						},
+						"description": "Ajoute un véhicule à un garage.\n\n⚠️ CONTRAINTE MÉTIER: Maximum 50 véhicules par garage.\n\n📤 PUBLISHER: Cette API publie un événement Kafka 'VehicleCreatedEvent' lors de la création.\n\nChamps obligatoires: brand, anneeFabrication, typeCarburant\nValeurs typeCarburant: ESSENCE, DIESEL, ELECTRIC, HYBRID"
+					}
+				},
+				{
+					"name": "Lister les véhicules d'un garage",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/garages/1/vehicles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"garages",
+								"1",
+								"vehicles"
+							]
+						},
+						"description": "Récupère tous les véhicules d'un garage spécifique"
+					}
+				},
+				{
+					"name": "Lister véhicules par modèle (tous garages)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicles/model/Clio",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"model",
+								"Clio"
+							]
+						},
+						"description": "Récupère tous les véhicules d'un modèle donné dans plusieurs garages (partage des modèles)"
+					}
+				},
+				{
+					"name": "Modifier un véhicule",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"brand\": \"Renault\",\n  \"model\": \"Clio V RS Line\",\n  \"anneeFabrication\": 2024,\n  \"typeCarburant\": \"ESSENCE\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicles/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"1"
+							]
+						},
+						"description": "Met à jour les informations d'un véhicule"
+					}
+				},
+				{
+					"name": "Supprimer un véhicule",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicles/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"1"
+							]
+						},
+						"description": "Supprime un véhicule d'un garage"
+					}
+				}
+			]
+		},
+		{
+			"name": "Accessories",
+			"description": "API de gestion des accessoires véhicules. Champs obligatoires: nom, description, prix, type",
+			"item": [
+				{
+					"name": "Ajouter un accessoire à un véhicule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nom\": \"GPS Navigation\",\n  \"description\": \"Système de navigation intégré\",\n  \"prix\": 500.00,\n  \"type\": \"ELECTRONIC\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicles/1/accessories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"1",
+								"accessories"
+							]
+						},
+						"description": "Ajoute un accessoire à un véhicule.\nChamps obligatoires: nom, description, prix, type\nValeurs type: INTERIOR, EXTERIOR, ELECTRONIC, SAFETY, COMFORT, PERFORMANCE"
+					}
+				},
+				{
+					"name": "Lister les accessoires d'un véhicule",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/api/vehicles/1/accessories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"vehicles",
+								"1",
+								"accessories"
+							]
+						},
+						"description": "Récupère tous les accessoires d'un véhicule"
+					}
+				},
+				{
+					"name": "Modifier un accessoire",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nom\": \"GPS Navigation Premium\",\n  \"description\": \"Système de navigation avec écran tactile 10 pouces\",\n  \"prix\": 750.00,\n  \"type\": \"ELECTRONIC\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/accessories/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"accessories",
+								"1"
+							]
+						},
+						"description": "Met à jour les informations d'un accessoire"
+					}
+				},
+				{
+					"name": "Supprimer un accessoire",
+					"request": {
+						"method": "DELETE",
+						"url": {
+							"raw": "{{baseUrl}}/api/accessories/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"accessories",
+								"1"
+							]
+						},
+						"description": "Supprime un accessoire"
+					}
+				}
+			]
+		}
+	]
+}
