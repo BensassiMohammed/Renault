@@ -67,4 +67,9 @@ public class GarageService {
         List<Garage> garages = garageRepository.findByAccessoryName(accessoryName);
         return mapper.toDtoList(garages);
     }
+
+    @Transactional(readOnly = true)
+    public Page<GarageDto> searchGaragesByName(String name, Pageable pageable) {
+        return garageRepository.findByNameContainingIgnoreCase(name, pageable).map(mapper::toDto);
+    }
 }

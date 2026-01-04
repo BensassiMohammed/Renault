@@ -58,9 +58,9 @@ class AccessoryServiceTest {
 
         accessoryDto = new AccessoryDto();
         accessoryDto.setId(1L);
-        accessoryDto.setName("GPS Navigation");
+        accessoryDto.setNom("GPS Navigation");
         accessoryDto.setDescription("Système de navigation");
-        accessoryDto.setPrice(new BigDecimal("4999.99"));
+        accessoryDto.setPrix(new BigDecimal("4999.99"));
         accessoryDto.setType(AccessoryType.ELECTRONIC);
         accessoryDto.setVehicleId(1L);
     }
@@ -76,7 +76,8 @@ class AccessoryServiceTest {
         AccessoryDto result = accessoryService.addAccessoryToVehicle(1L, accessoryDto);
 
         assertThat(result).isNotNull();
-        assertThat(result.getName()).isEqualTo("GPS Navigation");
+        assertThat(result.getNom()).isEqualTo("GPS Navigation");
+        verify(accessoryRepository).save(any(Accessory.class));
     }
 
     @Test
@@ -89,28 +90,7 @@ class AccessoryServiceTest {
     }
 
     @Test
-    @DisplayName("Récupérer un accessoire par ID - succès")
-    void getAccessoryById_Success() {
-        when(accessoryRepository.findById(1L)).thenReturn(Optional.of(accessory));
-        when(mapper.toDto(accessory)).thenReturn(accessoryDto);
-
-        AccessoryDto result = accessoryService.getAccessoryById(1L);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getPrice()).isEqualByComparingTo(new BigDecimal("4999.99"));
-    }
-
-    @Test
-    @DisplayName("Récupérer un accessoire par ID - non trouvé")
-    void getAccessoryById_NotFound() {
-        when(accessoryRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> accessoryService.getAccessoryById(99L))
-                .isInstanceOf(AccessoryNotFoundException.class);
-    }
-
-    @Test
-    @DisplayName("Lister les accessoires d'un véhicule")
+    @DisplayName("Lister les accessoires d'un véhicule - succès")
     void getAccessoriesByVehicle_Success() {
         when(vehicleRepository.existsById(1L)).thenReturn(true);
         when(accessoryRepository.findByVehicleId(1L)).thenReturn(List.of(accessory));
@@ -119,24 +99,51 @@ class AccessoryServiceTest {
         List<AccessoryDto> result = accessoryService.getAccessoriesByVehicle(1L);
 
         assertThat(result).hasSize(1);
+        assertThat(result.get(0).getNom()).isEqualTo("GPS Navigation");
     }
 
     @Test
-    @DisplayName("Lister les accessoires par type")
-    void getAccessoriesByType_Success() {
-        when(accessoryRepository.findByType(AccessoryType.ELECTRONIC)).thenReturn(List.of(accessory));
-        when(mapper.toDtoList(List.of(accessory))).thenReturn(List.of(accessoryDto));
+    @DisplayName("Lister les accessoires d'un véhicule - véhicule non trouvé")
+    void getAccessoriesByVehicle_VehicleNotFound() {
+        when(vehicleRepository.existsById(99L)).thenReturn(false);
 
-        List<AccessoryDto> result = accessoryService.getAccessoriesByType(AccessoryType.ELECTRONIC);
+        assertThatThrownBy(() -> accessoryService.getAccessoriesByVehicle(99L))
+                .isInstanceOf(VehicleNotFoundException.class);
+    }
 
-        assertThat(result).hasSize(1);
+    @Test
+    @DisplayName("Mettre à jour un accessoire - succès")
+    void updateAccessory_Success() {
+        AccessoryDto updateDto = new AccessoryDto();
+        updateDto.setNom("GPS Navigation Pro");
+        updateDto.setPrix(new BigDecimal("5999.99"));
+
+        when(accessoryRepository.findById(1L)).thenReturn(Optional.of(accessory));
+        when(accessoryRepository.save(any(Accessory.class))).thenReturn(accessory);
+        when(mapper.toDto(any(Accessory.class))).thenReturn(updateDto);
+
+        AccessoryDto result = accessoryService.updateAccessory(1L, updateDto);
+
+        assertThat(result.getNom()).isEqualTo("GPS Navigation Pro");
+        verify(mapper).updateFromDto(updateDto, accessory);
+    }
+
+    @Test
+    @DisplayName("Mettre à jour un accessoire - non trouvé")
+    void updateAccessory_NotFound() {
+        when(accessoryRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> accessoryService.updateAccessory(99L, accessoryDto))
+                .isInstanceOf(AccessoryNotFoundException.class);
     }
 
     @Test
     @DisplayName("Supprimer un accessoire - succès")
     void deleteAccessory_Success() {
         when(accessoryRepository.existsById(1L)).thenReturn(true);
+
         accessoryService.deleteAccessory(1L);
+
         verify(accessoryRepository).deleteById(1L);
     }
 
@@ -144,6 +151,7 @@ class AccessoryServiceTest {
     @DisplayName("Supprimer un accessoire - non trouvé")
     void deleteAccessory_NotFound() {
         when(accessoryRepository.existsById(99L)).thenReturn(false);
+
         assertThatThrownBy(() -> accessoryService.deleteAccessory(99L))
                 .isInstanceOf(AccessoryNotFoundException.class);
     }

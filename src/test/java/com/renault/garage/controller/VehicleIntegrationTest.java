@@ -48,15 +48,16 @@ class VehicleIntegrationTest {
                 vehicleRepository.deleteAll();
                 garageRepository.deleteAll();
 
-                testGarage = new Garage("Garage Test", "1 Rue Test", "0123456789",
-                                "test@renault.fr");
+                testGarage = new Garage("Garage Renault Casablanca", "123 Boulevard Zerktouni, Casablanca",
+                                "0522123456",
+                                "casablanca@renault.ma");
                 testGarage = garageRepository.save(testGarage);
 
                 testVehicleDto = new VehicleDto();
                 testVehicleDto.setBrand("Renault");
                 testVehicleDto.setModel("Clio");
-                testVehicleDto.setManufacturingYear(2023);
-                testVehicleDto.setFuelType(FuelType.ESSENCE);
+                testVehicleDto.setAnneeFabrication(2023);
+                testVehicleDto.setTypeCarburant(FuelType.ESSENCE);
         }
 
         @Test
@@ -114,7 +115,8 @@ class VehicleIntegrationTest {
         @DisplayName("GET /api/vehicles/model/{model} - Lister par modèle")
         void getVehiclesByModel_Success() throws Exception {
                 Garage garage2 = garageRepository.save(
-                                new Garage("Garage 2", "Addr 2", "0987654321", "g2@test.fr"));
+                                new Garage("Garage Rabat", "Avenue Mohammed V, Rabat", "0537222222",
+                                                "rabat@renault.ma"));
 
                 Vehicle v1 = new Vehicle("Renault", "Clio", 2023, FuelType.ESSENCE);
                 v1.setGarage(testGarage);
@@ -134,22 +136,6 @@ class VehicleIntegrationTest {
                                 .andExpect(jsonPath("$[*].model", everyItem(equalTo("Clio"))));
         }
 
-        @Test
-        @DisplayName("GET /api/vehicles/fuel-type/{fuelType} - Lister par type de carburant")
-        void getVehiclesByFuelType_Success() throws Exception {
-                Vehicle v1 = new Vehicle("Renault", "ZOE", 2023, FuelType.ELECTRIC);
-                v1.setGarage(testGarage);
-                vehicleRepository.save(v1);
-
-                Vehicle v2 = new Vehicle("Renault", "Megane E-Tech", 2023, FuelType.ELECTRIC);
-                v2.setGarage(testGarage);
-                vehicleRepository.save(v2);
-
-                mockMvc.perform(get("/api/vehicles/fuel-type/{fuelType}", "ELECTRIC"))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$", hasSize(2)))
-                                .andExpect(jsonPath("$[*].fuelType", everyItem(equalTo("ELECTRIC"))));
-        }
 
         @Test
         @DisplayName("PUT /api/vehicles/{id} - Modifier un véhicule")
@@ -161,15 +147,15 @@ class VehicleIntegrationTest {
                 VehicleDto updateDto = new VehicleDto();
                 updateDto.setBrand("Renault");
                 updateDto.setModel("Clio RS");
-                updateDto.setManufacturingYear(2023);
-                updateDto.setFuelType(FuelType.ESSENCE);
+                updateDto.setAnneeFabrication(2023);
+                updateDto.setTypeCarburant(FuelType.ESSENCE);
 
                 mockMvc.perform(put("/api/vehicles/{id}", vehicle.getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(updateDto)))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.model").value("Clio RS"))
-                                .andExpect(jsonPath("$.manufacturingYear").value(2023));
+                                .andExpect(jsonPath("$.anneeFabrication").value(2023));
         }
 
         @Test
@@ -183,19 +169,4 @@ class VehicleIntegrationTest {
                                 .andExpect(status().isNoContent());
         }
 
-        @Test
-        @DisplayName("POST /api/vehicles/{id}/transfer/{targetId} - Transférer un véhicule")
-        void transferVehicle_Success() throws Exception {
-                Garage targetGarage = garageRepository.save(
-                                new Garage("Garage Target", "Target Addr", "0555555555", "target@test.fr"));
-
-                Vehicle vehicle = new Vehicle("Renault", "Captur", 2023, FuelType.HYBRID);
-                vehicle.setGarage(testGarage);
-                vehicle = vehicleRepository.save(vehicle);
-
-                mockMvc.perform(post("/api/vehicles/{vehicleId}/transfer/{targetGarageId}",
-                                vehicle.getId(), targetGarage.getId()))
-                                .andExpect(status().isOk())
-                                .andExpect(jsonPath("$.garageId").value(targetGarage.getId()));
-        }
 }

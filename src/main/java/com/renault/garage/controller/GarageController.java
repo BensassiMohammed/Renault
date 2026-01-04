@@ -75,4 +75,12 @@ public class GarageController {
             @Parameter(description = "Nom de l'accessoire") @RequestParam String nom) {
         return garageService.getGaragesByAccessoryName(nom);
     }
+
+    @GetMapping("/search/by-name")
+    @Operation(summary = "Rechercher par nom", description = "Recherche paginée des garages dont le nom contient la chaîne fournie")
+    public Page<GarageDto> searchByName(
+            @Parameter(description = "Nom du garage") @RequestParam String name,
+            @PageableDefault(size = 10, sort = "name", direction = Sort.Direction.ASC) Pageable pageable) {
+        return garageService.searchGaragesByName(name, pageable);
+    }
 }

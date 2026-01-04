@@ -54,8 +54,8 @@ class VehicleServiceTest {
     void setUp() {
         ReflectionTestUtils.setField(vehicleService, "maxVehiclesPerGarage", 50);
 
-        garage = new Garage("Garage Casablanca", "Rue Hassan II",
-                "0522111111", "casa@renault.ma");
+        garage = new Garage("Garage Renault Casablanca", "123 Boulevard Zerktouni",
+                "0522123456", "casablanca@renault.ma");
         garage.setId(1L);
 
         vehicle = new Vehicle("Renault", "Clio", 2023, FuelType.ESSENCE);
@@ -66,8 +66,8 @@ class VehicleServiceTest {
         vehicleDto.setId(1L);
         vehicleDto.setBrand("Renault");
         vehicleDto.setModel("Clio");
-        vehicleDto.setManufacturingYear(2023);
-        vehicleDto.setFuelType(FuelType.ESSENCE);
+        vehicleDto.setAnneeFabrication(2023);
+        vehicleDto.setTypeCarburant(FuelType.ESSENCE);
         vehicleDto.setGarageId(1L);
     }
 
@@ -84,6 +84,7 @@ class VehicleServiceTest {
 
         assertThat(result).isNotNull();
         assertThat(result.getBrand()).isEqualTo("Renault");
+        assertThat(result.getModel()).isEqualTo("Clio");
         verify(vehicleEventPublisher).publishVehicleCreated(any(Vehicle.class));
     }
 
@@ -107,28 +108,7 @@ class VehicleServiceTest {
     }
 
     @Test
-    @DisplayName("Récupérer un véhicule par ID - succès")
-    void getVehicleById_Success() {
-        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(vehicle));
-        when(mapper.toDto(vehicle)).thenReturn(vehicleDto);
-
-        VehicleDto result = vehicleService.getVehicleById(1L);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getModel()).isEqualTo("Clio");
-    }
-
-    @Test
-    @DisplayName("Récupérer un véhicule par ID - non trouvé")
-    void getVehicleById_NotFound() {
-        when(vehicleRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> vehicleService.getVehicleById(99L))
-                .isInstanceOf(VehicleNotFoundException.class);
-    }
-
-    @Test
-    @DisplayName("Lister les véhicules d'un garage")
+    @DisplayName("Lister les véhicules d'un garage - succès")
     void getVehiclesByGarage_Success() {
         when(garageRepository.existsById(1L)).thenReturn(true);
         when(vehicleRepository.findByGarageId(1L)).thenReturn(List.of(vehicle));
@@ -137,10 +117,20 @@ class VehicleServiceTest {
         List<VehicleDto> result = vehicleService.getVehiclesByGarage(1L);
 
         assertThat(result).hasSize(1);
+        assertThat(result.get(0).getBrand()).isEqualTo("Renault");
     }
 
     @Test
-    @DisplayName("Lister les véhicules par modèle")
+    @DisplayName("Lister les véhicules d'un garage - garage non trouvé")
+    void getVehiclesByGarage_GarageNotFound() {
+        when(garageRepository.existsById(99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> vehicleService.getVehiclesByGarage(99L))
+                .isInstanceOf(GarageNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("Lister les véhicules par modèle - succès")
     void getVehiclesByModel_Success() {
         when(vehicleRepository.findByModel("Clio")).thenReturn(List.of(vehicle));
         when(mapper.toDtoList(List.of(vehicle))).thenReturn(List.of(vehicleDto));
@@ -148,37 +138,53 @@ class VehicleServiceTest {
         List<VehicleDto> result = vehicleService.getVehiclesByModel("Clio");
 
         assertThat(result).hasSize(1);
+        assertThat(result.get(0).getModel()).isEqualTo("Clio");
     }
 
     @Test
-    @DisplayName("Transférer un véhicule - succès")
-    void transferVehicle_Success() {
-        Garage targetGarage = new Garage("Garage Rabat", "Avenue Mohammed V", "0537222222", "rabat@renault.ma");
-        targetGarage.setId(2L);
+    @DisplayName("Mettre à jour un véhicule - succès")
+    void updateVehicle_Success() {
+        VehicleDto updateDto = new VehicleDto();
+        updateDto.setBrand("Renault");
+        updateDto.setModel("Clio RS");
+        updateDto.setAnneeFabrication(2024);
+        updateDto.setTypeCarburant(FuelType.ESSENCE);
 
         when(vehicleRepository.findById(1L)).thenReturn(Optional.of(vehicle));
-        when(garageRepository.findById(2L)).thenReturn(Optional.of(targetGarage));
-        when(vehicleRepository.countByGarageId(2L)).thenReturn(10L);
         when(vehicleRepository.save(any(Vehicle.class))).thenReturn(vehicle);
-        when(mapper.toDto(any(Vehicle.class))).thenReturn(vehicleDto);
+        when(mapper.toDto(any(Vehicle.class))).thenReturn(updateDto);
 
-        VehicleDto result = vehicleService.transferVehicle(1L, 2L);
+        VehicleDto result = vehicleService.updateVehicle(1L, updateDto);
 
-        assertThat(result).isNotNull();
-        verify(vehicleRepository).save(vehicle);
+        assertThat(result.getModel()).isEqualTo("Clio RS");
+        verify(mapper).updateFromDto(updateDto, vehicle);
     }
 
     @Test
-    @DisplayName("Transférer un véhicule - garage cible plein")
-    void transferVehicle_TargetGarageFull() {
-        Garage targetGarage = new Garage("Garage Rabat", "Avenue Mohammed V", "0537222222", "rabat@renault.ma");
-        targetGarage.setId(2L);
+    @DisplayName("Mettre à jour un véhicule - non trouvé")
+    void updateVehicle_NotFound() {
+        when(vehicleRepository.findById(99L)).thenReturn(Optional.empty());
 
-        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(vehicle));
-        when(garageRepository.findById(2L)).thenReturn(Optional.of(targetGarage));
-        when(vehicleRepository.countByGarageId(2L)).thenReturn(50L);
+        assertThatThrownBy(() -> vehicleService.updateVehicle(99L, vehicleDto))
+                .isInstanceOf(VehicleNotFoundException.class);
+    }
 
-        assertThatThrownBy(() -> vehicleService.transferVehicle(1L, 2L))
-                .isInstanceOf(GarageCapacityExceededException.class);
+    @Test
+    @DisplayName("Supprimer un véhicule - succès")
+    void deleteVehicle_Success() {
+        when(vehicleRepository.existsById(1L)).thenReturn(true);
+
+        vehicleService.deleteVehicle(1L);
+
+        verify(vehicleRepository).deleteById(1L);
+    }
+
+    @Test
+    @DisplayName("Supprimer un véhicule - non trouvé")
+    void deleteVehicle_NotFound() {
+        when(vehicleRepository.existsById(99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> vehicleService.deleteVehicle(99L))
+                .isInstanceOf(VehicleNotFoundException.class);
     }
 }

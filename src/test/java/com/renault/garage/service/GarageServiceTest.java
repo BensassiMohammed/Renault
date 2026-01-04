@@ -2,6 +2,7 @@ package com.renault.garage.service;
 
 import com.renault.garage.dto.GarageDto;
 import com.renault.garage.entity.Garage;
+import com.renault.garage.enums.FuelType;
 import com.renault.garage.exception.GarageNotFoundException;
 import com.renault.garage.mapper.GarageMapper;
 import com.renault.garage.repository.GarageRepository;
@@ -42,17 +43,16 @@ class GarageServiceTest {
 
     @BeforeEach
     void setUp() {
-        garage = new Garage("Garage Renault Casablanca", "123 Boulevard Zerktouni", "0522123456", "casa@renault.ma");
+        garage = new Garage("Garage Renault Casablanca", "123 Boulevard Zerktouni", "0522123456",
+                "casablanca@renault.ma");
         garage.setId(1L);
-        garage.setCity("Casablanca");
 
         garageDto = new GarageDto();
         garageDto.setId(1L);
         garageDto.setName("Garage Renault Casablanca");
-        garageDto.setAddress("123 Boulevard Zerktouni");
-        garageDto.setCity("Casablanca");
+        garageDto.setAddress("123 Boulevard Zerktouni, Casablanca");
         garageDto.setTelephone("0522123456");
-        garageDto.setEmail("casa@renault.ma");
+        garageDto.setEmail("casablanca@renault.ma");
     }
 
     @Test
@@ -79,6 +79,7 @@ class GarageServiceTest {
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getName()).isEqualTo("Garage Renault Casablanca");
     }
 
     @Test
@@ -86,7 +87,8 @@ class GarageServiceTest {
     void getGarageById_NotFound() {
         when(garageRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> garageService.getGarageById(99L)).isInstanceOf(GarageNotFoundException.class)
+        assertThatThrownBy(() -> garageService.getGarageById(99L))
+                .isInstanceOf(GarageNotFoundException.class)
                 .hasMessageContaining("99");
     }
 
@@ -103,6 +105,7 @@ class GarageServiceTest {
 
         assertThat(result).isNotEmpty();
         assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getName()).isEqualTo("Garage Renault Casablanca");
     }
 
     @Test
@@ -110,6 +113,9 @@ class GarageServiceTest {
     void updateGarage_Success() {
         GarageDto updateDto = new GarageDto();
         updateDto.setName("Garage Renault Rabat");
+        updateDto.setAddress("Avenue Mohammed V, Rabat");
+        updateDto.setTelephone("0537123456");
+        updateDto.setEmail("rabat@renault.ma");
 
         when(garageRepository.findById(1L)).thenReturn(Optional.of(garage));
         when(garageRepository.save(any(Garage.class))).thenReturn(garage);
@@ -122,10 +128,21 @@ class GarageServiceTest {
     }
 
     @Test
+    @DisplayName("Mettre à jour un garage - non trouvé")
+    void updateGarage_NotFound() {
+        when(garageRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> garageService.updateGarage(99L, garageDto))
+                .isInstanceOf(GarageNotFoundException.class);
+    }
+
+    @Test
     @DisplayName("Supprimer un garage - succès")
     void deleteGarage_Success() {
         when(garageRepository.existsById(1L)).thenReturn(true);
+
         garageService.deleteGarage(1L);
+
         verify(garageRepository).deleteById(1L);
     }
 
@@ -133,7 +150,32 @@ class GarageServiceTest {
     @DisplayName("Supprimer un garage - non trouvé")
     void deleteGarage_NotFound() {
         when(garageRepository.existsById(99L)).thenReturn(false);
+
         assertThatThrownBy(() -> garageService.deleteGarage(99L))
                 .isInstanceOf(GarageNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("Rechercher les garages par type de carburant")
+    void getGaragesByVehicleFuelType_Success() {
+        when(garageRepository.findByVehicleFuelType(FuelType.ELECTRIC)).thenReturn(List.of(garage));
+        when(mapper.toDtoList(List.of(garage))).thenReturn(List.of(garageDto));
+
+        List<GarageDto> result = garageService.getGaragesByVehicleFuelType(FuelType.ELECTRIC);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Garage Renault Casablanca");
+    }
+
+    @Test
+    @DisplayName("Rechercher les garages par nom d'accessoire")
+    void getGaragesByAccessoryName_Success() {
+        when(garageRepository.findByAccessoryName("GPS")).thenReturn(List.of(garage));
+        when(mapper.toDtoList(List.of(garage))).thenReturn(List.of(garageDto));
+
+        List<GarageDto> result = garageService.getGaragesByAccessoryName("GPS");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Garage Renault Casablanca");
     }
 }
